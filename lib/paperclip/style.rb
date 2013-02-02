@@ -6,7 +6,7 @@ module Paperclip
 
   class Style
 
-    attr_reader :name, :attachment, :format
+    attr_reader :name, :attachment, :format, :compress
 
     # Creates a Style object. +name+ is the name of the attachment,
     # +definition+ is the style definition from has_attached_file, which
@@ -18,6 +18,9 @@ module Paperclip
         @geometry = definition.delete(:geometry)
         @format = definition.delete(:format)
         @processors = definition.delete(:processors)
+        #SARAV-BEGIN: Compress
+        @compress = definition.delete(:compress)
+        #SARAV-END: Compress
         @convert_options = definition.delete(:convert_options)
         @source_file_options = definition.delete(:source_file_options)
         @other_args = definition
@@ -51,6 +54,12 @@ module Paperclip
       !!whiny
     end
 
+    #SARAV-BEGIN: Compress
+    def compress
+      @compress
+    end
+    #SARAV-END: Compress
+
     def convert_options
       @convert_options.respond_to?(:call) ? @convert_options.call(attachment.instance) :
         (@convert_options || attachment.send(:extra_options_for, name))
@@ -75,7 +84,7 @@ module Paperclip
       @other_args.each do |k,v|
         args[k] = v.respond_to?(:call) ? v.call(attachment) : v
       end
-      [:processors, :geometry, :format, :whiny, :convert_options, :source_file_options].each do |k|
+      [:processors, :geometry, :format, :whiny, :convert_options, :source_file_options, :compress].each do |k|
         (arg = send(k)) && args[k] = arg
       end
       args
@@ -84,7 +93,7 @@ module Paperclip
     # Supports getting and setting style properties with hash notation to ensure backwards-compatibility
     # eg. @attachment.styles[:large][:geometry]@ will still work
     def [](key)
-      if [:name, :convert_options, :whiny, :processors, :geometry, :format, :animated, :source_file_options].include?(key)
+      if [:name, :convert_options, :whiny, :processors, :geometry, :format, :animated, :source_file_options, :compress].include?(key)
         send(key)
       elsif defined? @other_args[key]
         @other_args[key]
@@ -92,7 +101,7 @@ module Paperclip
     end
 
     def []=(key, value)
-      if [:name, :convert_options, :whiny, :processors, :geometry, :format, :animated, :source_file_options].include?(key)
+      if [:name, :convert_options, :whiny, :processors, :geometry, :format, :animated, :source_file_options, :compress].include?(key)
         send("#{key}=".intern, value)
       else
         @other_args[key] = value

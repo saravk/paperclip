@@ -80,6 +80,18 @@ module Paperclip
       s
     end
 
+    #SARAV-PATCH-BEGIN
+    # Returns the width and height in a format suitable to be passed to Geometry.parse
+    def vert_to_s
+      s = ""
+      s << height.to_i.to_s if height > 0
+      s << "x#{width.to_i}" if width > 0
+      s << modifier.to_s
+      s
+    end
+    #SARAV-PATCH-END
+
+
     # Same as to_s
     def inspect
       to_s
@@ -98,7 +110,18 @@ module Paperclip
         scale_geometry, scale = scaling(dst, ratio)
         crop_geometry         = cropping(dst, ratio, scale)
       else
-        scale_geometry        = dst.to_s
+        #SARAV-PATCH-BEGIN: For vertical image, flip the dimensions
+        if (self.vertical?)
+          if smallvert
+            scale_geometry        = dst.to_s
+          else
+            scale_geometry        = dst.vert_to_s
+          end
+        else
+          scale_geometry        = dst.to_s
+        end
+        #scale_geometry        = dst.to_s
+        #SARAV-PATCH-END
       end
 
       [ scale_geometry, crop_geometry ]

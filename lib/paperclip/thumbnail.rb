@@ -37,6 +37,9 @@ module Paperclip
       @convert_options     = options[:convert_options]
       @whiny               = options[:whiny].nil? ? true : options[:whiny]
       @format              = options[:format]
+      #SARAV-BEGIN: Compress
+      @compress            = options[:compress]
+      #SARAV-END: Compress
       @animated            = options[:animated].nil? ? true : options[:animated]
       @auto_orient         = options[:auto_orient].nil? ? true : options[:auto_orient]
       if @auto_orient && @current_geometry.respond_to?(:auto_orient)
@@ -78,6 +81,10 @@ module Paperclip
         parameters = parameters.flatten.compact.join(" ").strip.squeeze(" ")
 
         success = convert(parameters, :source => "#{File.expand_path(src.path)}#{'[0]' unless animated?}", :dest => File.expand_path(dst.path))
+        if not @compress.blank?
+          success = Paperclip.run("jpegoptim", "--strip-all :dest", :dest => File.expand_path(dst.path))
+          dst = File.open(File.expand_path(dst.path))
+        end
       rescue Cocaine::ExitStatusError => e
         raise Paperclip::Error, "There was an error processing the thumbnail for #{@basename}" if @whiny
       rescue Cocaine::CommandNotFoundError => e
