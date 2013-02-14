@@ -30,8 +30,8 @@ module Paperclip
 
       geometry             = options[:geometry] # this is not an option
       @file                = file
-      @crop                = geometry[-1,1] == '#'
-      @smallvert           = geometry[-1,1] == '<'
+      @crop                = geometry && geometry[-1,1] == '#'
+      @smallvert           = geometry && geometry[-1,1] == '<'
       @target_geometry     = (options[:string_geometry_parser] || Geometry).parse(geometry)
       @current_geometry    = (options[:file_geometry_parser] || Geometry).from_file(@file)
       @source_file_options = options[:source_file_options]
