@@ -63,6 +63,7 @@ module Paperclip
     # +url_generator+ - the object used to generate URLs, using the interpolator. Defaults to Paperclip::UrlGenerator
     # +escape_url+ - Perform URI escaping to URLs. Defaults to true
     def initialize(name, instance, options = {})
+      Paperclip.log("SARAV: Enter initialize.")
       @name              = name
       @instance          = instance
 
@@ -89,13 +90,16 @@ module Paperclip
     # another Paperclip attachment:
     #   new_user.avatar = old_user.avatar
     def assign uploaded_file
+      Paperclip.log("SARAV: Enter Assign.")
+
       ensure_required_accessors!
       file = Paperclip.io_adapters.for(uploaded_file)
 
+      Paperclip.log("SARAV: Assigning attachment.")
       self.clear(*only_process)
       return nil if file.nil?
 
-      Paperclip.log("SARAV: Assigning attachment.")
+      Paperclip.log("SARAV: Assigning attachment + Queue.")
       @queued_for_write[:original]   = file
       instance_write(:file_name,       cleanup_filename(file.original_filename))
       instance_write(:content_type,    file.content_type.to_s.strip)
@@ -168,6 +172,7 @@ module Paperclip
     end
 
     def styles
+      Paperclip.log("SARAV: Enter styles.")
       if @options[:styles].respond_to?(:call) || @normalized_styles.nil?
         styles = @options[:styles]
         styles = styles.call(self) if styles.respond_to?(:call)
@@ -181,12 +186,14 @@ module Paperclip
     end
 
     def only_process
+      Paperclip.log("SARAV: Enter only_process.")
       only_process = @options[:only_process].dup
       only_process = only_process.call(self) if only_process.respond_to?(:call)
       only_process.map(&:to_sym)
     end
 
     def processors
+      Paperclip.log("SARAV: Enter processors.")
       processing_option = @options[:processors]
 
       if processing_option.respond_to?(:call)
@@ -209,6 +216,8 @@ module Paperclip
     # Saves the file, if there are no errors. If there are, it flushes them to
     # the instance's errors and returns false, cancelling the save.
     def save
+      Paperclip.log("SARAV: Enter save.")
+
       flush_deletes unless @options[:keep_old_files]
       flush_writes
       @dirty = false
@@ -219,6 +228,7 @@ module Paperclip
     # nil to the attachment. Does NOT save. If you wish to clear AND save,
     # use #destroy.
     def clear(*styles_to_clear)
+      Paperclip.log("SARAV: Enter clear.")
       if styles_to_clear.any?
         queue_some_for_delete(*styles_to_clear)
       else
@@ -240,6 +250,7 @@ module Paperclip
 
     # Returns the uploaded file if present.
     def uploaded_file
+      Paperclip.log("SARAV: Enter uploaded_file")
       instance_read(:uploaded_file)
     end
 
@@ -337,6 +348,7 @@ module Paperclip
     # instance_write(:file_name, "me.jpg") will write "me.jpg" to the instance's
     # "avatar_file_name" field (assuming the attachment is called avatar).
     def instance_write(attr, value)
+      Paperclip.log("SARAV: Enter instance_write")
       setter = :"#{name}_#{attr}="
       if instance.respond_to?(setter)
         instance.send(setter, value)
@@ -346,6 +358,7 @@ module Paperclip
     # Reads the attachment-specific attribute on the instance. See instance_write
     # for more details.
     def instance_read(attr)
+      Paperclip.log("SARAV: Enter instance_read")
       getter = :"#{name}_#{attr}"
       if instance.respond_to?(getter)
         instance.send(getter)
@@ -359,6 +372,7 @@ module Paperclip
     end
 
     def ensure_required_accessors! #:nodoc:
+      Paperclip.log("SARAV: Enter ensure_required_accessors")
       %w(file_name).each do |field|
         unless @instance.respond_to?("#{name}_#{field}") && @instance.respond_to?("#{name}_#{field}=")
           raise Paperclip::Error.new("#{@instance.class} model missing required attr_accessor for '#{name}_#{field}'")
@@ -371,6 +385,8 @@ module Paperclip
     end
 
     def valid_assignment? #:nodoc:
+      Paperclip.log("SARAV: Enter valid_assignment")
+
       if instance.valid?
         true
       else
@@ -381,6 +397,7 @@ module Paperclip
     end
 
     def initialize_storage #:nodoc:
+      Paperclip.log("SARAV: Enter initialize_storage")
       storage_class_name = @options[:storage].to_s.downcase.camelize
       begin
         storage_module = Paperclip::Storage.const_get(storage_class_name)
@@ -392,6 +409,8 @@ module Paperclip
     end
 
     def extra_options_for(style) #:nodoc:
+      Paperclip.log("SARAV: Enter extra_options_for")
+
       all_options   = @options[:convert_options][:all]
       all_options   = all_options.call(instance)   if all_options.respond_to?(:call)
       style_options = @options[:convert_options][style]
@@ -410,6 +429,8 @@ module Paperclip
     end
 
     def post_process(*style_args) #:nodoc:
+      Paperclip.log("SARAV: Enter post_process")
+
       return if @queued_for_write[:original].nil?
 
       Paperclip.log("SARAV: In post_process")
@@ -429,6 +450,8 @@ module Paperclip
     end
 
     def post_process_style(name, style) #:nodoc:
+      Paperclip.log("SARAV: Enter post_process_style")
+
       begin
         raise RuntimeError.new("Style #{name} has no processors defined.") if style.processors.blank?
         Paperclip.log("SARAV: In post_process_style for #{name}")
@@ -458,6 +481,8 @@ module Paperclip
     end
 
     def queue_all_for_delete #:nodoc:
+      Paperclip.log("SARAV: Enter queue_all_for_delete")
+
       return if @options[:preserve_files] || !file?
       @queued_for_delete += [:original, *styles.keys].uniq.map do |style|
         path(style) if exists?(style)
@@ -471,6 +496,8 @@ module Paperclip
     end
 
     def flush_errors #:nodoc:
+      Paperclip.log("SARAV: Enter flush_errors")
+
       @errors.each do |error, message|
         [message].flatten.each {|m| instance.errors.add(name, m) }
       end
@@ -478,6 +505,8 @@ module Paperclip
 
     # called by storage after the writes are flushed and before @queued_for_writes is cleared
     def after_flush_writes
+      Paperclip.log("SARAV: Enter after_flush_writes")
+
        @queued_for_write.each do |style, file|
          file.close unless file.closed?
          file.unlink if file.respond_to?(:unlink) && file.path.present? && File.exist?(file.path)
@@ -485,6 +514,8 @@ module Paperclip
     end
 
     def cleanup_filename(filename)
+      Paperclip.log("SARAV: Enter cleanup_filename")
+
       if @options[:restricted_characters]
         filename.gsub(@options[:restricted_characters], '_')
       else
