@@ -95,6 +95,7 @@ module Paperclip
       self.clear(*only_process)
       return nil if file.nil?
 
+      Paperclip.log("SARAV: Assigning attachment.")
       @queued_for_write[:original]   = file
       instance_write(:file_name,       cleanup_filename(file.original_filename))
       instance_write(:content_type,    file.content_type.to_s.strip)
@@ -209,7 +210,6 @@ module Paperclip
     # the instance's errors and returns false, cancelling the save.
     def save
       flush_deletes unless @options[:keep_old_files]
-      Paperclip.log("In Attachment:save calling flush_writes")
       flush_writes
       @dirty = false
       true
@@ -412,6 +412,7 @@ module Paperclip
     def post_process(*style_args) #:nodoc:
       return if @queued_for_write[:original].nil?
 
+      Paperclip.log("SARAV: In post_process")
       instance.run_paperclip_callbacks(:post_process) do
         instance.run_paperclip_callbacks(:"#{name}_post_process") do
           post_process_styles(*style_args)
@@ -420,6 +421,7 @@ module Paperclip
     end
 
     def post_process_styles(*style_args) #:nodoc:
+      Paperclip.log("SARAV: In post_process_styles")
       post_process_style(:original, styles[:original]) if styles.include?(:original) && process_style?(:original, style_args)
       styles.reject{ |name, style| name == :original }.each do |name, style|
         post_process_style(name, style) if process_style?(name, style_args)
@@ -429,6 +431,8 @@ module Paperclip
     def post_process_style(name, style) #:nodoc:
       begin
         raise RuntimeError.new("Style #{name} has no processors defined.") if style.processors.blank?
+        Paperclip.log("SARAV: In post_process_style for #{name}")
+
         @queued_for_write[name] = style.processors.inject(@queued_for_write[:original]) do |file, processor|
           Paperclip.processor(processor).make(file, style.processor_options, self)
         end

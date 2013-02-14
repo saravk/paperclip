@@ -297,10 +297,10 @@ module Paperclip
       end
 
       def flush_writes #:nodoc:
-        log("In S3: Flush Writes")
+        log("SARAV: In S3: Flush Writes")
         @queued_for_write.each do |style, file|
           begin
-            log("saving #{path(style)}")
+            log("S3 saving #{path(style)}")
             acl = @s3_permissions[style] || @s3_permissions[:default]
             acl = acl.call(self, style) if acl.respond_to?(:call)
             write_options = {
@@ -322,6 +322,7 @@ module Paperclip
 
             s3_object(style).write(file, write_options)
           rescue AWS::S3::Errors::NoSuchBucket => e
+            log("SARAV: In S3: Errors::NoSuchBucket")
             create_bucket
             retry
           ensure
