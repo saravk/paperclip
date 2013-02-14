@@ -31,6 +31,7 @@ module Paperclip
       geometry             = options[:geometry] # this is not an option
       @file                = file
       @crop                = geometry[-1,1] == '#'
+      @smallvert           = geometry[-1,1] == '<'
       @target_geometry     = (options[:string_geometry_parser] || Geometry).parse(geometry)
       @current_geometry    = (options[:file_geometry_parser] || Geometry).from_file(@file)
       @source_file_options = options[:source_file_options]
@@ -57,6 +58,13 @@ module Paperclip
     def crop?
       @crop
     end
+
+    #SARAV-BEGIN: Compress
+    # Returns true if the +target_geometry+ is meant to have smaller vertical files.
+    def smallvert?
+      @smallvert
+    end
+    #SARAV-BEGIN: Compress
 
     # Returns true if the image is meant to make use of additional convert options.
     def convert_options?
@@ -97,7 +105,7 @@ module Paperclip
     # Returns the command ImageMagick's +convert+ needs to transform the image
     # into the thumbnail.
     def transformation_command
-      scale, crop = @current_geometry.transformation_to(@target_geometry, crop?)
+      scale, crop = @current_geometry.transformation_to(@target_geometry, crop?, smallvert?)
       trans = []
       trans << "-coalesce" if animated?
       trans << "-auto-orient" if auto_orient
