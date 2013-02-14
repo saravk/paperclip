@@ -12,8 +12,8 @@ module Paperclip
     end
 
     def save_attached_files
-      Paperclip.log("Saving attachments.")
       each_attachment do |name, attachment|
+        Paperclip.log("Saving attachments : " + name)
         attachment.send(:save)
       end
     end

@@ -297,6 +297,7 @@ module Paperclip
       end
 
       def flush_writes #:nodoc:
+        log("In S3: Flush Writes")
         @queued_for_write.each do |style, file|
           begin
             log("saving #{path(style)}")

@@ -209,6 +209,7 @@ module Paperclip
     # the instance's errors and returns false, cancelling the save.
     def save
       flush_deletes unless @options[:keep_old_files]
+      Paperclip.log("In Attachment:save calling flush_writes")
       flush_writes
       @dirty = false
       true
@@ -384,6 +385,7 @@ module Paperclip
       begin
         storage_module = Paperclip::Storage.const_get(storage_class_name)
       rescue NameError
+        Paperclip.log("Cannot load storage module '#{storage_class_name}'")
         raise Errors::StorageMethodNotFound, "Cannot load storage module '#{storage_class_name}'"
       end
       self.extend(storage_module)
