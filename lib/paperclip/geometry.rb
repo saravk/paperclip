@@ -53,7 +53,7 @@ module Paperclip
 
     # True if the dimensions represent a vertical rectangle
     def vertical?
-      height > width
+      width < height
     end
 
     # The aspect ratio of the dimensions.
