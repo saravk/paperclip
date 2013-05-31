@@ -90,10 +90,10 @@ module Paperclip
 
         success = convert(parameters, :source => "#{File.expand_path(src.path)}#{'[0]' unless animated?}", :dest => File.expand_path(dst.path))
         if not @compress.blank?
-          success = Paperclip.run("jpegoptim", "--max=75 --strip-all :dest", :dest => File.expand_path(dst.path))
+          success = Paperclip.run("jpegoptim", "--strip-all :dest", :dest => File.expand_path(dst.path))
           dst = File.open(File.expand_path(dst.path))
         else
-          success = Paperclip.run("jpegoptim", "--max=80 :dest", :dest => File.expand_path(dst.path))
+          success = Paperclip.run("jpegoptim", ":dest", :dest => File.expand_path(dst.path))
           dst = File.open(File.expand_path(dst.path))
         end
       rescue Cocaine::ExitStatusError => e
